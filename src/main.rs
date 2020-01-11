@@ -18,6 +18,7 @@ impl<T> Task<T> {
         }
     }
 
+    // Wakerを使ってfutureを1ステップ進めるだけ
     fn run_step(&mut self, waker: &Waker) -> Poll<T> {
         let f = self.fut.as_mut();
         let mut ctx = Context::from_waker(waker);
@@ -25,14 +26,7 @@ impl<T> Task<T> {
     }
 }
 
-use std::collections::VecDeque;
-use std::collections::BTreeMap;
-
-struct Executor {
-    run_queue: VecDeque<TaskId>,
-    task_pool: BTreeMap<TaskId, Task<()>>,
-    task_id: u64,
-}
+////
 
 use std::sync::Arc;
 use std::mem::ManuallyDrop;
@@ -85,6 +79,17 @@ fn new_waker() -> Waker {
     unsafe { Waker::from_raw(raw_clone(Arc::into_raw(inner) as *const ())) }
 }
 
+////
+
+use std::collections::VecDeque;
+use std::collections::BTreeMap;
+
+struct Executor {
+    run_queue: VecDeque<TaskId>,
+    task_pool: BTreeMap<TaskId, Task<()>>,
+    task_id: u64,
+}
+
 impl Executor {
     fn new() -> Self {
         Self {
@@ -134,6 +139,8 @@ impl Executor {
         }
     }
 }
+
+////
 
 fn main() {
     let mut executor = Executor::new();
