@@ -95,7 +95,7 @@ impl Executor {
     }
 
     fn fresh_id(&mut self) -> TaskId {
-        let tid = 0;
+        let tid = self.task_id;
         self.task_id += 1;
 
         TaskId(tid)
@@ -117,7 +117,8 @@ impl Executor {
 
             while let Some(task_id) = self.run_queue.pop_front() {
                 let polled = {
-                    let task = self.task_pool.get_mut(&task_id).expect("");
+                    let task = self.task_pool.get_mut(&task_id)
+                        .expect("task_id must exists");
 
                     let waker = new_waker();
                     task.run_step(&waker)
@@ -137,11 +138,12 @@ impl Executor {
 fn main() {
     let mut executor = Executor::new();
 
-    executor.spawn(f());
+    executor.spawn(f(1));
+    executor.spawn(f(2));
 
     executor.run()
 }
 
-async fn f() {
-    println!("Hello, world!");
+async fn f(i: usize) {
+    println!("Hello, world! : {}", i);
 }
