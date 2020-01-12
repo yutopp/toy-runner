@@ -1,7 +1,7 @@
-use core::task::Poll;
-use core::task::{Context, Waker};
 use core::future::Future;
 use core::pin::Pin;
+use core::task::Poll;
+use core::task::{Context, Waker};
 use std::sync::Arc;
 
 #[derive(PartialEq, PartialOrd, Eq, Ord, Clone)]
@@ -9,16 +9,14 @@ struct TaskId(pub u64);
 
 // 最初のタスクの定義。標準は使わない。
 struct Task<T> {
-     fut: Pin<Box<dyn Future<Output = T>>>,
+    fut: Pin<Box<dyn Future<Output = T>>>,
 }
 
 type TaskRef<T> = Arc<RefCell<Task<T>>>;
 
 impl<T> Task<T> {
     fn new(f: impl Future<Output = T> + 'static) -> TaskRef<T> {
-        Arc::new(RefCell::new(Self {
-            fut: Box::pin(f)
-        }))
+        Arc::new(RefCell::new(Self { fut: Box::pin(f) }))
     }
 
     // Wakerを使ってfutureを1ステップ進めるだけ
@@ -34,9 +32,8 @@ impl<T> Task<T> {
 use core::mem::ManuallyDrop;
 use core::task::{RawWaker, RawWakerVTable};
 
-static VTABLE: RawWakerVTable = {
-    RawWakerVTable::new(raw_clone, raw_wake, raw_wake_by_ref, raw_drop)
-};
+static VTABLE: RawWakerVTable =
+    { RawWakerVTable::new(raw_clone, raw_wake, raw_wake_by_ref, raw_drop) };
 
 struct WakerInner {
     task: TaskRef<()>,
@@ -49,9 +46,7 @@ impl WakerInner {
 
     fn wake(&self) {
         // 今回の実装では、仮にthread_localのExecutorを見つけてきてそこにスケジューリングする
-        EXECUTOR.with(|e| {
-            e.borrow().schedule(self.task.clone())
-        })
+        EXECUTOR.with(|e| e.borrow().schedule(self.task.clone()))
     }
 }
 
@@ -144,12 +139,18 @@ impl Executor {
 
 // 動作確認用のテストFuture。
 // 1度目のpollは中断。2回目で完了にしてくれる。
-struct OneSkipFuture<T> where T: std::marker::Unpin + Clone {
+struct OneSkipFuture<T>
+where
+    T: std::marker::Unpin + Clone,
+{
     t: T,
     twice: bool,
 }
 
-impl<T> Future for OneSkipFuture<T> where T: std::marker::Unpin + Clone {
+impl<T> Future for OneSkipFuture<T>
+where
+    T: std::marker::Unpin + Clone,
+{
     type Output = T;
 
     fn poll(self: Pin<&mut Self>, ctx: &mut Context) -> Poll<Self::Output> {
@@ -176,7 +177,7 @@ impl<T> Future for OneSkipFuture<T> where T: std::marker::Unpin + Clone {
 
 use core::cell::RefCell;
 
-thread_local!{
+thread_local! {
     static EXECUTOR: RefCell<Executor> = RefCell::new(Executor::new());
 }
 
@@ -216,8 +217,5 @@ async fn f(i: usize) {
 }
 
 fn one_skip(i: usize) -> OneSkipFuture<usize> {
-    OneSkipFuture {
-        t: i,
-        twice: false,
-    }
+    OneSkipFuture { t: i, twice: false }
 }
