@@ -211,6 +211,10 @@ fn main() {
 }
 
 async fn f(i: usize) {
+    //if i == 1 {
+    //    spawn(f(3))
+    //}
+
     println!("f-before : {}", i);
     one_skip(i).await; // ここで一旦pendingになり、スケジュールが他のタスクに移るはず
     println!("f-end : {}", i);
